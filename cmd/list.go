@@ -22,6 +22,7 @@ family-tree list --person`,
 
 		headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 		columnFmt := color.New(color.FgYellow).SprintfFunc()
+
 		if relationship {
 			tbl := table.New("ID", "Type")
 			tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
@@ -29,16 +30,20 @@ family-tree list --person`,
 				tbl.AddRow(relationship.ID, relationship.Type)
 			}
 			tbl.Print()
-		} else if person {
+			return
+		}
+
+		if person {
 			tbl := table.New("ID", "Name", "Gender", "Family Root")
 			tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 			for _, person := range database.Database.GetPeople() {
 				tbl.AddRow(person.ID, person.Name, person.Gender, person.FamilyRoot)
 			}
 			tbl.Print()
-		} else {
-			fmt.Println("Please specify either --relationship or --person")
+			return
 		}
+
+		fmt.Println("Please specify either --relationship or --person")
 	},
 }
 
