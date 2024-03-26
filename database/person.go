@@ -2,9 +2,10 @@ package database
 
 import (
 	"database/sql"
-	"github.com/meanii/family-tree/model"
 	"log"
 	"slices"
+
+	"github.com/meanii/family-tree/model"
 )
 
 // CreatePersonTable creates the person table in the database
@@ -29,10 +30,17 @@ func (d *SqlDatabase) InsertPerson(name string, gender string, family_root bool)
 
 	nameExists := d.GetPerson(model.Person{Name: name}).ID != 0
 	if nameExists {
-		log.Fatalf("the name you provided already exists in the database! We cannot have two people with the same name.")
+		log.Fatalf(
+			"the name you provided already exists in the database! We cannot have two people with the same name.",
+		)
 	}
 
-	_, err := d.Database.Exec(`INSERT INTO person (name, gender, family_root) VALUES (?, ?, ?)`, name, gender, family_root)
+	_, err := d.Database.Exec(
+		`INSERT INTO person (name, gender, family_root) VALUES (?, ?, ?)`,
+		name,
+		gender,
+		family_root,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +57,6 @@ func (d *SqlDatabase) GetPerson(personArgs model.Person) model.Person {
 	defer func(row *sql.Rows) {
 		err := row.Close()
 		if err != nil {
-
 		}
 	}(row)
 
@@ -60,6 +67,30 @@ func (d *SqlDatabase) GetPerson(personArgs model.Person) model.Person {
 		}
 	}
 	return person
+}
+
+// GetPeople returns all people from the database
+func (d *SqlDatabase) GetPeople() []model.Person {
+	var people []model.Person
+	rows, err := d.Database.Query(`SELECT * FROM person`)
+	if err != nil {
+		log.Fatalf("error getting people: %v", err)
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Fatalf("error closing rows: %v", err)
+		}
+	}(rows)
+	for rows.Next() {
+		var person model.Person
+		err := rows.Scan(&person.ID, &person.Name, &person.Gender, &person.FamilyRoot)
+		if err != nil {
+			log.Fatalf("error scanning people: %v", err)
+		}
+		people = append(people, person)
+	}
+	return people
 }
 
 // getPersonQuery returns a sql.Rows object, or an error

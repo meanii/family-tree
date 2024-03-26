@@ -2,8 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"github.com/meanii/family-tree/model"
 	"log"
+
+	"github.com/meanii/family-tree/model"
 )
 
 func (d *SqlDatabase) CreateRelationshipTable() {
@@ -18,9 +19,10 @@ func (d *SqlDatabase) CreateRelationshipTable() {
 
 // InsertRelationship inserts a new row into the relationship table
 func (d *SqlDatabase) InsertRelationship(relationshipType string) {
-
 	// check if the relationship type already exists in the database, if it does, exit the program
-	relationshipTypeExists := d.GetRelationship(model.Relationship{Type: relationshipType, ID: 0}).ID == 0
+	relationshipTypeExists := d.GetRelationship(
+		model.Relationship{Type: relationshipType, ID: 0},
+	).ID == 0
 	if relationshipTypeExists != true {
 		log.Fatalf("the relationship type you provided already exists in the database!")
 	}
@@ -56,15 +58,44 @@ func (d *SqlDatabase) GetRelationship(relationshipArgs model.Relationship) model
 	return relationship
 }
 
+// GetRelationships returns all relationships from the database
+func (d *SqlDatabase) GetRelationships() []model.Relationship {
+	var relationships []model.Relationship
+	rows, err := d.Database.Query(`SELECT id, type FROM relationship`)
+	if err != nil {
+		log.Fatalf("error getting relationships: %v", err)
+	}
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Fatalf("error closing rows: %v", err)
+		}
+	}(rows)
+	for rows.Next() {
+		var relationship model.Relationship
+		err := rows.Scan(&relationship.ID, &relationship.Type)
+		if err != nil {
+			log.Fatalf("error scanning relationships: %v", err)
+		}
+		relationships = append(relationships, relationship)
+	}
+	return relationships
+}
+
 // getQuery returns a sql.Rows object
 func (d *SqlDatabase) getRelationshipQuery(relationshipArgs model.Relationship) (*sql.Rows, error) {
-
 	if relationshipArgs.ID != 0 {
-		return d.Database.Query(`SELECT id, type FROM relationship WHERE id = ?`, relationshipArgs.ID)
+		return d.Database.Query(
+			`SELECT id, type FROM relationship WHERE id = ?`,
+			relationshipArgs.ID,
+		)
 	}
 
 	if relationshipArgs.Type != "" {
-		return d.Database.Query(`SELECT id, type FROM relationship WHERE type = ?`, relationshipArgs.Type)
+		return d.Database.Query(
+			`SELECT id, type FROM relationship WHERE type = ?`,
+			relationshipArgs.Type,
+		)
 	}
 
 	return nil, nil

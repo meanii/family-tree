@@ -26,5 +26,4 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

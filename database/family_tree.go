@@ -2,8 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"github.com/meanii/family-tree/model"
 	"log"
+
+	"github.com/meanii/family-tree/model"
 )
 
 func (d *SqlDatabase) CreateFamilyTreeTable() {
@@ -23,7 +24,6 @@ func (d *SqlDatabase) CreateFamilyTreeTable() {
 
 // InsertFamilyTree inserts a new row into the family_tree table
 func (d *SqlDatabase) InsertFamilyTree(name string, of string, relationshipType string) {
-
 	person1Id := d.GetPerson(model.Person{Name: name}).ID
 	if person1Id == 0 {
 		log.Fatalf("person '%s' does not exist in the database!", name)
@@ -39,12 +39,23 @@ func (d *SqlDatabase) InsertFamilyTree(name string, of string, relationshipType 
 		log.Fatalf("relationship type '%s' does not exist in the database!\n", relationshipType)
 	}
 
-	relationshipExists := d.GetFamilyTree(model.FamilyTree{Person1ID: person1Id, Person2ID: person2Id, RelationshipID: relationshipId}).ID != 0
+	relationshipExists := d.GetFamilyTree(
+		model.FamilyTree{
+			Person1ID:      person1Id,
+			Person2ID:      person2Id,
+			RelationshipID: relationshipId,
+		},
+	).ID != 0
 	if relationshipExists {
 		log.Fatalf("the relationship you provided already exists already!")
 	}
 
-	_, err := d.Database.Exec(`INSERT INTO family_tree (person1_id, person2_id, relationship_id) VALUES (?, ?, ?)`, person1Id, person2Id, relationshipId)
+	_, err := d.Database.Exec(
+		`INSERT INTO family_tree (person1_id, person2_id, relationship_id) VALUES (?, ?, ?)`,
+		person1Id,
+		person2Id,
+		relationshipId,
+	)
 	if err != nil {
 		log.Fatalf("error inserting family tree: %v", err)
 	}
@@ -70,7 +81,12 @@ func (d *SqlDatabase) GetFamilyTree(familyTreeArgs model.FamilyTree) model.Famil
 	}(row)
 
 	for row.Next() {
-		err := row.Scan(&familyTree.ID, &familyTree.Person1ID, &familyTree.Person2ID, &familyTree.RelationshipID)
+		err := row.Scan(
+			&familyTree.ID,
+			&familyTree.Person1ID,
+			&familyTree.Person2ID,
+			&familyTree.RelationshipID,
+		)
 		if err != nil {
 			return model.FamilyTree{}
 		}
@@ -90,7 +106,11 @@ func (d *SqlDatabase) GetCountOf(relationshipType string, of string) int {
 	}
 
 	var count int
-	row, err := d.Database.Query(`SELECT COUNT(*) FROM family_tree WHERE relationship_id = ? AND person2_id = ?`, relationshipId, personId)
+	row, err := d.Database.Query(
+		`SELECT COUNT(*) FROM family_tree WHERE relationship_id = ? AND person2_id = ?`,
+		relationshipId,
+		personId,
+	)
 	if err != nil {
 		log.Fatalf("error getting count of: %v", err)
 	}
@@ -125,7 +145,11 @@ func (d *SqlDatabase) GetName(relationship string, of string) string {
 	}
 
 	var person1Id int
-	row, err := d.Database.Query(`SELECT person1_id FROM family_tree WHERE relationship_id = ? AND person2_id = ?`, relationshipId, personId)
+	row, err := d.Database.Query(
+		`SELECT person1_id FROM family_tree WHERE relationship_id = ? AND person2_id = ?`,
+		relationshipId,
+		personId,
+	)
 	if err != nil {
 		log.Fatalf("error getting name: %v", err)
 	}
