@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/meanii/family-tree/model"
-	"github.com/meanii/family-tree/pgk/reciprocal_relationship"
+	"github.com/meanii/family-tree/pkg/reciprocal_relationship"
 )
 
 func (d *SqlDatabase) CreateFamilyTreeTable() {
