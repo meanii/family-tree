@@ -2,6 +2,31 @@
 
 The **Family Tree** management tool is a command-line interface (CLI) application built in GoLang that helps users organize and visualize relationships between family members. This tool allows users to add new persons, create relationships, connect to a family tree database, list relationships or persons, and retrieve names based on relationships.
 
+# Content of the README
+1. [Installation](#installation)
+2. [Usage](#usage)
+3. [Additional Feature: Automatic Reciprocal Relationship Creation](#additional-feature-automatic-reciprocal-relationship-creation)
+4. [Database Schema Design](#database-schema-design)
+
+## Installation
+### Prerequisites
+- GoLang must be installed on your machine. You can download and install GoLang from the official website: [https://golang.org/dl/](https://golang.org/dl/)
+
+### local installation
+To install the Family Tree CLI tool on your local machine, follow these steps:
+- Clone the repository to your local machine using the following command:
+```shell
+git clone https://github.com/meanii/family-tree.git && cd family-tree
+```
+- Build the CLI tool using the following command:
+```shell
+go build -o family-tree
+```
+- Run the CLI tool using the following command:
+```shell
+./family-tree [command]
+```
+
 ## Usage
 family-tree [command]
 
