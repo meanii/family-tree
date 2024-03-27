@@ -15,5 +15,5 @@ func GetReciprocalRelationship(
 		}
 	}
 
-	return relationship
+	return model.Relationship{Type: ""}
 }

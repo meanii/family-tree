@@ -67,7 +67,13 @@ func (d *SqlDatabase) InsertFamilyTree(name string, of string, relationshipType 
 		person2,
 		relationship,
 	)
-	// create a the reciprocal relationship if it does not exist
+
+	if reciprocalRelationship.Type == "" {
+		// no reciprocal relationship exists
+		return
+	}
+
+	// create a reciprocal relationship if it does not exist
 	reciprocalRelationshipTypeExists := d.GetRelationship(reciprocalRelationship).ID != 0
 
 	if !reciprocalRelationshipTypeExists {
