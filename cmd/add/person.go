@@ -12,7 +12,7 @@ var personCmd = &cobra.Command{
 	Use:   "person",
 	Short: "a new person to the family tree",
 	Long: `Add a new person to the family tree. For example:
-family-tree add person --name="Anil Chauhan"
+family-tree add person --name="Someone Name"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		name := cmd.Flags().Lookup("name").Value.String()

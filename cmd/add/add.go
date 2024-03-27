@@ -11,8 +11,8 @@ var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new person or relationship to the family tree",
 	Long: `Add a new person or relationship to the family tree. For example:
-family-tree add person --name="Anil Chauhan"
-family-tree add relationship --type=brother
+family-tree add person --name="Someone Name"
+family-tree add relationship --type="brother"
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Help()
