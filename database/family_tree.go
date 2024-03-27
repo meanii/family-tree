@@ -171,7 +171,7 @@ func (d *SqlDatabase) GetCountOf(relationshipType string, of string) int {
 }
 
 // GetName returns the name of a person in a relationship
-func (d *SqlDatabase) GetName(relationship string, of string) model.Person {
+func (d *SqlDatabase) GetNames(relationship string, of string) []model.Person {
 	relationshipId := d.GetRelationship(model.Relationship{Type: relationship}).ID
 	if relationshipId == 0 {
 		log.Fatalf("relationship type '%s' does not exist in the database!\n", relationship)
@@ -182,7 +182,7 @@ func (d *SqlDatabase) GetName(relationship string, of string) model.Person {
 		log.Fatalf("person '%s' does not exist in the database!", of)
 	}
 
-	var person1Id int
+	var people []model.Person
 	row, err := d.Database.Query(
 		`SELECT person1_id FROM family_tree WHERE relationship_id = ? AND person2_id = ?`,
 		relationshipId,
@@ -200,11 +200,13 @@ func (d *SqlDatabase) GetName(relationship string, of string) model.Person {
 	}(row)
 
 	for row.Next() {
-		err := row.Scan(&person1Id)
+		var personId int
+		err := row.Scan(&personId)
 		if err != nil {
 			log.Fatalf("error scanning row: %v", err)
 		}
-	}
+		people = append(people, d.GetPerson(model.Person{ID: personId}))
 
-	return d.GetPerson(model.Person{ID: person1Id})
+	}
+	return people
 }
