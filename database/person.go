@@ -51,12 +51,17 @@ func (d *SqlDatabase) GetPerson(personArgs model.Person) model.Person {
 	var person model.Person
 	row, err := d.getPersonQuery(personArgs)
 	if err != nil {
-		panic(err)
+		log.Fatalf("error getting person: %v", err)
+	}
+
+	if row == nil {
+		return model.Person{ID: 0}
 	}
 
 	defer func(row *sql.Rows) {
 		err := row.Close()
 		if err != nil {
+			log.Fatalf("error closing rows: %v", err)
 		}
 	}(row)
 

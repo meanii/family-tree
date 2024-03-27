@@ -17,8 +17,12 @@ family-tree name --relationship="father" --of="Name 2"`,
 		relationship := cmd.Flags().Lookup("relationship").Value.String()
 		of := cmd.Flags().Lookup("of").Value.String()
 
-		name := database.Database.GetName(relationship, of)
-		fmt.Printf("Name of the person: %s\n", name)
+		person := database.Database.GetName(relationship, of)
+		if person.ID == 0 {
+			fmt.Printf("No person found with the relationship '%s' of '%s'\n", relationship, of)
+			return
+		}
+		fmt.Printf("Name of the person: %s\n", person.Name)
 	},
 }
 

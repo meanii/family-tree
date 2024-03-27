@@ -2,9 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/meanii/family-tree/model"
+	"github.com/meanii/family-tree/pgk/reciprocal_relationship"
 )
 
 func (d *SqlDatabase) CreateFamilyTreeTable() {
@@ -24,26 +26,26 @@ func (d *SqlDatabase) CreateFamilyTreeTable() {
 
 // InsertFamilyTree inserts a new row into the family_tree table
 func (d *SqlDatabase) InsertFamilyTree(name string, of string, relationshipType string) {
-	person1Id := d.GetPerson(model.Person{Name: name}).ID
-	if person1Id == 0 {
+	person1 := d.GetPerson(model.Person{Name: name})
+	if person1.ID == 0 {
 		log.Fatalf("person '%s' does not exist in the database!", name)
 	}
 
-	person2Id := d.GetPerson(model.Person{Name: of}).ID
-	if person2Id == 0 {
+	person2 := d.GetPerson(model.Person{Name: of})
+	if person2.ID == 0 {
 		log.Fatalf("person '%s' does not exist in the database!", of)
 	}
 
-	relationshipId := d.GetRelationship(model.Relationship{Type: relationshipType}).ID
-	if relationshipId == 0 {
+	relationship := d.GetRelationship(model.Relationship{Type: relationshipType})
+	if relationship.ID == 0 {
 		log.Fatalf("relationship type '%s' does not exist in the database!\n", relationshipType)
 	}
 
 	relationshipExists := d.GetFamilyTree(
 		model.FamilyTree{
-			Person1ID:      person1Id,
-			Person2ID:      person2Id,
-			RelationshipID: relationshipId,
+			Person1ID:      person1.ID,
+			Person2ID:      person2.ID,
+			RelationshipID: relationship.ID,
 		},
 	).ID != 0
 	if relationshipExists {
@@ -52,13 +54,43 @@ func (d *SqlDatabase) InsertFamilyTree(name string, of string, relationshipType 
 
 	_, err := d.Database.Exec(
 		`INSERT INTO family_tree (person1_id, person2_id, relationship_id) VALUES (?, ?, ?)`,
-		person1Id,
-		person2Id,
-		relationshipId,
+		person1.ID,
+		person2.ID,
+		relationship.ID,
 	)
 	if err != nil {
 		log.Fatalf("error inserting family tree: %v", err)
 	}
+
+	// adding the reciprocal relationship
+	reciprocalRelationship := reciprocal_relationship.GetReciprocalRelationship(
+		person2,
+		relationship,
+	)
+	// create a the reciprocal relationship if it does not exist
+	reciprocalRelationshipTypeExists := d.GetRelationship(reciprocalRelationship).ID != 0
+
+	if !reciprocalRelationshipTypeExists {
+		d.InsertRelationship(reciprocalRelationship.Type)
+	}
+
+	reciprocalRelationship.ID = d.GetRelationship(reciprocalRelationship).ID
+	// insert the reciprocal relationship
+	_, err = d.Database.Exec(
+		`INSERT INTO family_tree (person1_id, person2_id, relationship_id) VALUES (?, ?, ?)`,
+		person2.ID,
+		person1.ID,
+		reciprocalRelationship.ID,
+	)
+	if err != nil {
+		log.Fatalf("error inserting family tree: %v", err)
+	}
+	fmt.Printf(
+		"Adding resiprocal relationship: '%s' as '%s' of '%s'.\n",
+		of,
+		reciprocalRelationship.Type,
+		name,
+	)
 }
 
 // GetFamilyTree returns a family tree from the database
@@ -133,14 +165,14 @@ func (d *SqlDatabase) GetCountOf(relationshipType string, of string) int {
 }
 
 // GetName returns the name of a person in a relationship
-func (d *SqlDatabase) GetName(relationship string, of string) string {
+func (d *SqlDatabase) GetName(relationship string, of string) model.Person {
 	relationshipId := d.GetRelationship(model.Relationship{Type: relationship}).ID
 	if relationshipId == 0 {
 		log.Fatalf("relationship type '%s' does not exist in the database!\n", relationship)
 	}
 
-	personId := d.GetPerson(model.Person{Name: of}).ID
-	if personId == 0 {
+	person := d.GetPerson(model.Person{Name: of})
+	if person.ID == 0 {
 		log.Fatalf("person '%s' does not exist in the database!", of)
 	}
 
@@ -148,7 +180,7 @@ func (d *SqlDatabase) GetName(relationship string, of string) string {
 	row, err := d.Database.Query(
 		`SELECT person1_id FROM family_tree WHERE relationship_id = ? AND person2_id = ?`,
 		relationshipId,
-		personId,
+		person.ID,
 	)
 	if err != nil {
 		log.Fatalf("error getting name: %v", err)
@@ -168,5 +200,5 @@ func (d *SqlDatabase) GetName(relationship string, of string) string {
 		}
 	}
 
-	return d.GetPerson(model.Person{ID: person1Id}).Name
+	return d.GetPerson(model.Person{ID: person1Id})
 }
